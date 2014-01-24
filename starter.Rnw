@@ -1,0 +1,118 @@
+\documentclass{elsarticle}
+\usepackage{amsfonts,xcolor}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\newcommand{\X}{\mathrm{X}}
+\newcommand{\R}{\textit{R}}
+\newcommand{\Xh}{\hat{\mathrm{X}}}
+\newcommand{\transpose}{^\mathrm{T}}
+\usepackage{geometry}
+\usepackage{url}
+\usepackage[boxed]{algorithm2e}
+\usepackage{booktabs}
+\usepackage{algorithmicx,algpseudocode}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+
+\begin{document}
+<<setup, include=FALSE, cache=FALSE,eval=FALSE>>=
+options(xtable.comment = FALSE)
+options(replace.assign=TRUE,width=90)
+options( digits = 4 )
+# knit_hooks$set(rgl = hook_rgl)
+# head(hook_rgl)  # the hook function is defined as this
+library(ANTsR)
+library(boot)
+library(xtable)
+library(grid)
+library(png)
+library(abind)
+library(grDevices)
+library(infotheo)
+library(xtable)
+library(fastICA)
+@
+
+<<definevars, include=FALSE, cache=FALSE,eval=TRUE>>=
+# define some global variables that are used later
+qv<-1;mysig<-1
+@
+
+
+\title{Reproducible Decoding of Haxby 2001 Data}
+\author{Brian B. Avants}
+\begin{abstract}
+Eigenanatomy is a general formulation for sparse component analysis of
+medical imaging data.  Eigenanatomy (EANAT) may be used to reduce the
+dimensionality of large datasets to a manageable size, extract
+covarying patterns from structural or functional imaging or to
+identify ``network" predictors that may be used in standard population
+analyses.  The EANAT framework implements a variety of possible sparse
+decompositions where we may force components to be smooth along an
+anatomical manifold.  Here, we summarize this new framework from a
+theoretical and practical perspective.  Early results in a cortical
+thickness study of Mild Cognitive Impairment (MCI) highlight
+advantages with respect to voxel-wise methods.  We also contrast EANAT
+results with other sparse decomposition methods.  The study software and data are
+publicly available in a free framework, ANTsR, based on ANTs (image
+registration, segmentation, bias correction) and R
+(the statistical programming platform).
+\end{abstract}
+\maketitle
+\section{Introduction}
+Haxby 2001 popularized the concept of ``decoding'' \cite{Haxby2012,Haxby2001}.
+
+\R~is a popular statistical programming language \cite{Tabelow2011,Chavan2009,Lin2004}.
+
+Our main contributions in this paper are:
+
+\begin{enumerate}
+\item  A
+\item B
+\item C
+\item D
+\end{enumerate}
+
+
+\section{Methods}
+
+\subsection{Notation}
+Define a $n\times p$ (rows by columns) matrix ${\bf X }$, where $n$ is
+the number of observations (subjects) and  $p$ is the number of total
+voxels. For instance, ${\bf X}$ can be the cortical thickess ....
+
+ \begin{equation}
+\underset{U, V}{\operatorname{arg\,min}} 
+\|{\bf X} - {\bf UV^{\top}} \|_F^2 
+\label{sparse:matrix}
+\end{equation}
+
+
+\section{Results}
+
+We read in the population data, template, mask, etc.
+
+<<readdata,eval=FALSE>>=
+# dont do anything just a place-holder
+ddd<-0
+@
+
+\subsection{Reduce dimensionality}
+
+Next we do the eanat decomposition.
+
+\section{Discussion}
+
+\begin{figure}[h]
+  \centering
+%    \includegraphics[width=1.0\textwidth]{figure/network1.png}
+  \caption{A significant network.}
+\end{figure}
+
+The anatomy of this component and Talairach coordinates.
+
+Enjoy! 
+
+\bibliographystyle{IEEEtran}
+\bibliography{rfmri_paper}
+\end{document}
