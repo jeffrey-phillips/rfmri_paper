@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
-# Modified from Nov14.R by Jeff Phillips, 1-20-2014
+# Modified from Nov14.R by Jeff Phillips, 1-20-2014:
+# Motion parameters no longer reduced via svd.
+# Added code to compile design file from model directory in Open fMRI dataset.
 ########################################################
 # this assumes that we know the "block" stimuli   ######
 # which allows us to majority vote over a block   ######
@@ -11,6 +13,8 @@ library(ANTsR)
 library(pheatmap)
 library(e1071)
 ########################################################
+# Global variables:
+studydir<-"/Users/jeff/krns/haxby/openfmri"
 ########################################################
 # Declare function fmriPredictorMatrix.
 # Input: BOLD 4D dataset, mask file, motion parameters, 
@@ -54,8 +58,24 @@ majoritylabel <- function( groundtruth, myprediction )
     }
   return(myvotedlabels)
   }
+
+# Create a single design file called "labels.txt" for each subject.
+# Note that this is 
+condkey<-read.table(paste(studydir,"/models/model001/condition_key.txt",sep=""),header=F,colClasses="character")
+names(condkey)<-c("task","cond","label")
+design<-data.frame(labels=rep("rest",1452),chunks=rep(0:11,each=121),stringsAsFactors=FALSE)
+for (cond in 1:8) {
+	for (run in 1:12) {
+		tmp<-read.table(paste("model/model001/onsets/task001_run",sprintf("%03d",run),"/cond",sprintf("%03d",cond),".txt",sep=""),header=F)
+		vols<-121*(run-1)+unique(floor(tmp$V1/2.5))
+		design$labels[vols]<-condkey$label[condkey$cond==paste("cond",sprintf("%03d",cond),sep="")]
+	}
+}
+design$labels<-as.factor(design$labels)
+write.table(file="labels.txt",design,row.names=F,sep="\t",quote=F)
+
 if ( ! exists("myrates") ) myrates<-rep(NA,12)
-design<-read.table('labels.txt',header=T)
+#design<-read.table('labels.txt',header=T)
 unique(design$chunks)
 runstotest<-unique(design$chunks)
 runstotest<-runstotest[ runstotest < 12 ] 
