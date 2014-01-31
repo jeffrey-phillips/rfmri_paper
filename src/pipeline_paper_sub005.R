@@ -63,9 +63,9 @@ majoritylabel <- function( groundtruth, myprediction )
 # Note that this is shifted forward in time relative to the PyMVPA version of this study's data.
 condkey<-read.table(paste(studydir,"/models/model001/condition_key.txt",sep=""),header=F,colClasses="character")
 names(condkey)<-c("task","cond","label")
-design<-data.frame(labels=rep("rest",1452),chunks=rep(0:11,each=121),stringsAsFactors=FALSE)
+design<-data.frame(labels=rep("rest",1331),chunks=rep(0:10,each=121),stringsAsFactors=FALSE)
 for (cond in 1:8) {
-	for (run in 1:12) {
+	for (run in 1:11) {
 		tmp<-read.table(paste("model/model001/onsets/task001_run",sprintf("%03d",run),"/cond",sprintf("%03d",cond),".txt",sep=""),header=F)
 #		vols<-121*(run-1)+unique(floor(tmp$V1/2.5))
 		vols<-121*(run-1)+which(approx(x=seq(0,300,by=2),y=(seq(0,300,by=2) %in% tmp$V1),xout=2.5*(0:120))$y>0)[1:10]
@@ -77,11 +77,11 @@ for (cond in 1:8) {
 design$labels<-as.factor(design$labels)
 write.table(file="labels.txt",design,row.names=F,sep="\t",quote=F)
 
-if ( ! exists("myrates") ) myrates<-rep(NA,12)
+if ( ! exists("myrates") ) myrates<-rep(NA,11)
 #design<-read.table('labels.txt',header=T)
 unique(design$chunks)
 runstotest<-unique(design$chunks)
-runstotest<-runstotest[ runstotest < 12 ] 
+runstotest<-runstotest[ runstotest < 11 ] 
 if ( ! file.exists("AFFINE.nii.gz") )
   {
   print("FAILURE --- you need to be within a subject's directory")
@@ -132,5 +132,5 @@ for ( wrun in runstotest )
   myrates[ wrun+1 ]<-myrate
 } # wrun loop
 ############################################################################################
-ratedf<-data.frame( RunNumber=c(0:11), CrossValidatedPredictionForRun=myrates )
+ratedf<-data.frame( RunNumber=c(0:10), CrossValidatedPredictionForRun=myrates )
 write.csv(ratedf,'mypredictionresults.csv',row.names=F)
