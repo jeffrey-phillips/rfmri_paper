@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
-# Modified from Nov14.R by Jeff Phillips, 1-20-2014:
-# Motion parameters no longer reduced via svd.
-# Added code to compile design file from model directory in Open fMRI dataset.
+# Modified from Nov14.R by Jeff Phillips, 1-20-2014.
+# Sub005 has a missing run and so has less data for training and testing.
 ########################################################
 # this assumes that we know the "block" stimuli   ######
 # which allows us to majority vote over a block   ######
@@ -21,14 +20,14 @@ studydir<-"/Users/jeff/krns/haxby/openfmri"
 fmriPredictorMatrix <- function( fmri, mask , motionin , selector = NA , ncompcor= 3 , nsvdcomp = 4 )
 {
   mat<-timeseries2matrix( fmri, mask )
-  if ( is.na( selector ) ) selector<-rep(TRUE, 1:nrow( motionin ) )
+  if ( sum(is.na( selector))>0 ) selector<-rep(TRUE, 1:nrow( motionin ))
   mat<-mat[ selector, ]
-#  msvd <- svd(t(motionin[selector,3:ncol(motionin) ]))
-#  motion <-as.matrix(msvd$v[, 1:nsvdcomp])
-  cmpc<-as.matrix( compcor( mat, ncompcor = ncompcor ) )
+  msvd <- svd(t(motionin[selector,3:ncol(motionin) ]))
+  motion <-as.matrix(msvd$v[, 1:nsvdcomp])
+  cmpc<-as.matrix( compcor( mat, ncompcor = ncompcor ))
   globsig<-apply( mat , FUN=mean , MARGIN=1 )
-#  if ( length(c(cmpc)) == nrow(mat) ) mat<-residuals( lm( mat ~ as.matrix(motion)   ) ) else mat<-residuals( lm( mat ~ as.matrix(motion)  ) )
-  if ( length(c(cmpc)) == nrow(mat) ) mat<-residuals( lm( mat ~ as.matrix(motionin[selector,])   ) ) else mat<-residuals( lm( mat ~ as.matrix(motionin[selector,])  ) )
+  if ( length(c(cmpc)) == nrow(mat)) mat<-residuals( lm( mat ~ as.matrix(motion)   )) else mat<-residuals( lm( mat ~ as.matrix(motion)  ))
+#  if ( length(c(cmpc)) == nrow(mat)) mat<-residuals( lm( mat ~ as.matrix(motionin[selector,])   )) else mat<-residuals( lm( mat ~ as.matrix(motionin[selector,])  ))
   mydot<-F
   if ( mydot ) mat<-temporalwhiten( mat )
   return( list( mat = mat, cmpc=cmpc, globsig=globsig )  )
@@ -42,17 +41,17 @@ majoritylabel <- function( groundtruth, myprediction )
   mylabs<-unique(  yt  )
   myyruns<-rep(NA,length(yt))
   myyruns[1]<-ct
-  for ( i in 1:(length(y)-1) )
+  for ( i in 1:(length(y)-1))
     {
     if ( yt[i] == yt[i+1] ) { myyruns[i+1]<-ct }  else { ct<-ct+1  ;   myyruns[i+1] <- ct }
     }
-  myvotedlabels<-data.frame( groundtruth=rep(NA,ct) , voted=rep(NA,ct) )
-  for ( i in unique( myyruns ) )
+  myvotedlabels<-data.frame( groundtruth=rep(NA,ct) , voted=rep(NA,ct))
+  for ( i in unique( myyruns ))
     {
     mylabs<-y[ myyruns == i ] 
     ff<-as.data.frame(table(mylabs))
     mylab<-ff$mylabs[ which.max( ff$Freq ) ]
-    print( paste( i, mylab ,yt[myyruns == i][1]) )
+    print( paste( i, mylab ,yt[myyruns == i][1]))
     myvotedlabels$groundtruth[i]<-as.character(yt[myyruns == i][1])
     myvotedlabels$voted[i]<-as.character(mylab)
     }
@@ -61,28 +60,28 @@ majoritylabel <- function( groundtruth, myprediction )
 
 # Create a single design file called "labels.txt" for each subject.
 # Note that this is shifted forward in time relative to the PyMVPA version of this study's data.
-condkey<-read.table(paste(studydir,"/models/model001/condition_key.txt",sep=""),header=F,colClasses="character")
-names(condkey)<-c("task","cond","label")
-design<-data.frame(labels=rep("rest",1331),chunks=rep(0:10,each=121),stringsAsFactors=FALSE)
-for (cond in 1:8) {
-	for (run in 1:11) {
-		tmp<-read.table(paste("model/model001/onsets/task001_run",sprintf("%03d",run),"/cond",sprintf("%03d",cond),".txt",sep=""),header=F)
+#condkey<-read.table(paste(studydir,"/models/model001/condition_key.txt",sep=""),header=F,colClasses="character")
+#names(condkey)<-c("task","cond","label")
+#design<-data.frame(labels=rep("rest",1331),chunks=rep(0:10,each=121),stringsAsFactors=FALSE)
+#for (cond in 1:8) {
+#	for (run in 1:11) {
+#		tmp<-read.table(paste("model/model001/onsets/task001_run",sprintf("%03d",run),"/cond",sprintf("%03d",cond),".txt",sep=""),header=F)
 #		vols<-121*(run-1)+unique(floor(tmp$V1/2.5))
-		vols<-121*(run-1)+which(approx(x=seq(0,300,by=2),y=(seq(0,300,by=2) %in% tmp$V1),xout=2.5*(0:120))$y>0)[1:10]
+#		vols<-121*(run-1)+which(approx(x=seq(0,300,by=2),y=(seq(0,300,by=2) %in% tmp$V1),xout=2.5*(0:120))$y>0.25)[1:10]
 #		h<-hist(tmp$V1/2.5,breaks=0:121,plot=FALSE)
-#		vols<-121*(run-1)+which(h$counts>0)[1:10]
-		design$labels[vols]<-condkey$label[condkey$cond==paste("cond",sprintf("%03d",cond),sep="")]
-	}
-}
-design$labels<-as.factor(design$labels)
-write.table(file="labels.txt",design,row.names=F,sep="\t",quote=F)
+#		vols<-121*(run-1)+which(h$counts>0)[1:9]
+#		design$labels[vols]<-condkey$label[condkey$cond==paste("cond",sprintf("%03d",cond),sep="")]
+#	}
+#}
+#design$labels<-as.factor(design$labels)
+#write.table(file="labels.txt",design,row.names=F,sep="\t",quote=F)
 
-if ( ! exists("myrates") ) myrates<-rep(NA,11)
-#design<-read.table('labels.txt',header=T)
-unique(design$chunks)
+if ( ! exists("myrates")) myrates<-rep(NA,11)
+design<-read.table('labels.txt',header=T)
+#unique(design$chunks)
 runstotest<-unique(design$chunks)
 runstotest<-runstotest[ runstotest < 11 ] 
-if ( ! file.exists("AFFINE.nii.gz") )
+if ( ! file.exists("AFFINE.nii.gz"))
   {
   print("FAILURE --- you need to be within a subject's directory")
   q()
@@ -90,7 +89,7 @@ if ( ! file.exists("AFFINE.nii.gz") )
 fmri<-antsImageRead("AFFINE.nii.gz",4)
 fmriavg<-antsImageRead("AFFINE_avg.nii.gz",3)
 motionin<-read.csv('AFFINEMOCOparams.csv')
-maskFull<-getMask(fmriavg,250,1.e9,TRUE)
+maskFull<-getMask(fmriavg,100,1.e9,TRUE)
 for ( wrun in runstotest )
 {
 #  print(paste("Processing run ", wrun, "...",sep=""))
@@ -101,13 +100,13 @@ for ( wrun in runstotest )
   ncc <- 4
   fmripreds<-fmriPredictorMatrix( fmri, mask, motionin, selector, ncompcor = ncc )
   fmripredsFull<-fmriPredictorMatrix( fmri, maskFull, motionin, selector, ncompcor = ncc )
-  mat<-residuals( lm( fmripreds$mat ~ fmripredsFull$cmpc ) )
+  mat<-residuals( lm( fmripreds$mat ~ fmripredsFull$cmpc ))
   myclasses <- levels( subdesign$labels )
   nclasses<-length(myclasses )
   myblocks<-matrix( rep(0,(nrow(mat))*nclasses ), nrow=( nrow(mat)  ))
   for ( i in 1:nclasses ) myblocks[,i]<-as.numeric(  subdesign$labels == myclasses[i] )
   mysblocks<-myblocks
-  for ( i in 1:ncol(mysblocks) ) mysblocks[,i]<-predict(smooth.spline(mysblocks[,i],df=100))$y
+  for ( i in 1:ncol(mysblocks)) mysblocks[,i]<-predict(smooth.spline(mysblocks[,i],df=100))$y
   mydesign<-cbind( myblocks, mysblocks )
   nv<-85
   ff<-svd( mat )
@@ -120,9 +119,9 @@ for ( wrun in runstotest )
 #######################
   fmriTest     <- fmriPredictorMatrix( fmri, mask,     motionin, selector2, ncompcor = ncc )
   fmriTestFull <- fmriPredictorMatrix( fmri, maskFull, motionin, selector2, ncompcor = ncc )
-  mat2<-residuals( lm( fmriTest$mat ~ fmriTestFull$cmpc ) )
+  mat2<-residuals( lm( fmriTest$mat ~ fmriTestFull$cmpc ))
   mysccanpreds2 <- ( mat2  ) %*% t( mysccanimages )
-  mydf2<-data.frame(  imgs = mysccanpreds2 ) # , corrs = cor( t( mysccanpreds2 ) ) )
+  mydf2<-data.frame(  imgs = mysccanpreds2 ) # , corrs = cor( t( mysccanpreds2 )) )
   mypred2<-predict( my.rf , newdata = mydf2 )
   subdesign2<-subset( design, selector2 )
   sublabels<-as.factor((subdesign2$labels))

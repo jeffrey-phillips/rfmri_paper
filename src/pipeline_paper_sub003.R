@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
-# Modified from Nov14.R by Jeff Phillips, 1-20-2014:
-# Motion parameters no longer reduced via svd.
-# Added code to compile design file from model directory in Open fMRI dataset.
+# Modified from Nov14.R by Jeff Phillips, 1-20-2014.
+# Includes a different mask threshold for sub003 than other subjects,
+# to avoid SVD from failing to converge.
 ########################################################
 # this assumes that we know the "block" stimuli   ######
 # which allows us to majority vote over a block   ######
@@ -90,7 +90,7 @@ if ( ! file.exists("AFFINE.nii.gz"))
 fmri<-antsImageRead("AFFINE.nii.gz",4)
 fmriavg<-antsImageRead("AFFINE_avg.nii.gz",3)
 motionin<-read.csv('AFFINEMOCOparams.csv')
-maskFull<-getMask(fmriavg,100,1.e9,TRUE)
+maskFull<-getMask(fmriavg,125,1.e9,TRUE)
 for ( wrun in runstotest )
 {
 #  print(paste("Processing run ", wrun, "...",sep=""))
